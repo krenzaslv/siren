@@ -40,7 +40,7 @@ class SDFDecoder(torch.nn.Module):
         elif opt.mode == 'nerf':
             self.model = modules.SingleBVPNet(type='relu', mode='nerf', final_layer_factor=1, in_features=3)
         self.model.load_state_dict(torch.load(opt.checkpoint_path))
-        self.model.cuda()
+        self.model.cpu()
 
     def forward(self, coords):
         model_in = {'coords': coords}

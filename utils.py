@@ -33,7 +33,7 @@ def densely_sample_activations(model, num_dim=1, num_steps=int(1e6)):
     else:
         input = torch.stack(torch.meshgrid(*(input for _ in num_dim)), dim=-1).view(-1, num_dim)
 
-    input = {'coords':input[None,:].cuda()}
+    input = {'coords':input[None,:].cpu()}
     with torch.no_grad():
         activations = model.forward_with_activations(input)['activations']
     return activations
@@ -50,7 +50,7 @@ def write_wave_summary(model, model_input, gt, model_output, writer, total_steps
 
     with torch.no_grad():
         frames = [0.0, 0.05, 0.1, 0.15, 0.25]
-        coords = [dataio.get_mgrid((1, sl, sl), dim=3)[None,...].cuda() for f in frames]
+        coords = [dataio.get_mgrid((1, sl, sl), dim=3)[None,...].cpu() for f in frames]
         for idx, f in enumerate(frames):
             coords[idx][..., 0] = f
         coords = torch.cat(coords, dim=0)
@@ -96,7 +96,7 @@ def write_wave_summary(model, model_input, gt, model_output, writer, total_steps
 
 def write_helmholtz_summary(model, model_input, gt, model_output, writer, total_steps, prefix='train_'):
     sl = 256
-    coords = dataio.get_mgrid(sl)[None,...].cuda()
+    coords = dataio.get_mgrid(sl)[None,...].cpu()
 
     def scale_percentile(pred, min_perc=1, max_perc=99):
         min = np.percentile(pred.cpu().numpy(),1)
@@ -251,7 +251,7 @@ def write_sdf_summary(model, model_input, gt, model_output, writer, total_steps,
 
     with torch.no_grad():
         yz_slice_coords = torch.cat((torch.zeros_like(slice_coords_2d[:, :1]), slice_coords_2d), dim=-1)
-        yz_slice_model_input = {'coords': yz_slice_coords.cuda()[None, ...]}
+        yz_slice_model_input = {'coords': yz_slice_coords.cpu()[None, ...]}
 
         yz_model_out = model(yz_slice_model_input)
         sdf_values = yz_model_out['model_out']
@@ -262,7 +262,7 @@ def write_sdf_summary(model, model_input, gt, model_output, writer, total_steps,
         xz_slice_coords = torch.cat((slice_coords_2d[:,:1],
                                      torch.zeros_like(slice_coords_2d[:, :1]),
                                      slice_coords_2d[:,-1:]), dim=-1)
-        xz_slice_model_input = {'coords': xz_slice_coords.cuda()[None, ...]}
+        xz_slice_model_input = {'coords': xz_slice_coords.cpu()[None, ...]}
 
         xz_model_out = model(xz_slice_model_input)
         sdf_values = xz_model_out['model_out']
@@ -272,7 +272,7 @@ def write_sdf_summary(model, model_input, gt, model_output, writer, total_steps,
 
         xy_slice_coords = torch.cat((slice_coords_2d[:,:2],
                                      -0.75*torch.ones_like(slice_coords_2d[:, :1])), dim=-1)
-        xy_slice_model_input = {'coords': xy_slice_coords.cuda()[None, ...]}
+        xy_slice_model_input = {'coords': xy_slice_coords.cpu()[None, ...]}
 
         xy_model_out = model(xy_slice_model_input)
         sdf_values = xy_model_out['model_out']
@@ -299,7 +299,7 @@ def write_video_summary(vid_dataset, model, model_input, gt, model_output, write
     frames = [0, 60, 120, 200]
     Nslice = 10
     with torch.no_grad():
-        coords = [dataio.get_mgrid((1, resolution[1], resolution[2]), dim=3)[None,...].cuda() for f in frames]
+        coords = [dataio.get_mgrid((1, resolution[1], resolution[2]), dim=3)[None,...].cpu() for f in frames]
         for idx, f in enumerate(frames):
             coords[idx][..., 0] = (f / (resolution[0] - 1) - 0.5) * 2
         coords = torch.cat(coords, dim=0)
